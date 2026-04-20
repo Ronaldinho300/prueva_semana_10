@@ -26,11 +26,16 @@ db.connect((err) => {
     );
   `;
 
+  /* Items now includes precio, stock, categoria e imagen (LONGTEXT para base64) */
   const createItems = `
     CREATE TABLE IF NOT EXISTS items (
       id INT AUTO_INCREMENT PRIMARY KEY,
       nombre VARCHAR(100) NOT NULL,
       descripcion TEXT,
+      precio DECIMAL(10,2) DEFAULT NULL,
+      stock INT DEFAULT NULL,
+      categoria VARCHAR(80) DEFAULT NULL,
+      imagen LONGTEXT DEFAULT NULL,
       estado BOOLEAN DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -43,7 +48,19 @@ db.connect((err) => {
 
   db.query(createItems, (err) => {
     if (err) console.error("Error creando tabla items:", err.message);
-    else console.log("📦 Tabla items lista");
+    else {
+      console.log("📦 Tabla items lista");
+      // Add new columns if they don't exist (for existing databases)
+      const alterCols = [
+        "ALTER TABLE items ADD COLUMN IF NOT EXISTS precio DECIMAL(10,2) DEFAULT NULL",
+        "ALTER TABLE items ADD COLUMN IF NOT EXISTS stock INT DEFAULT NULL",
+        "ALTER TABLE items ADD COLUMN IF NOT EXISTS categoria VARCHAR(80) DEFAULT NULL",
+        "ALTER TABLE items ADD COLUMN IF NOT EXISTS imagen LONGTEXT DEFAULT NULL",
+      ];
+      alterCols.forEach(sql => {
+        db.query(sql, (e) => { if (e && !e.message.includes("Duplicate column")) console.warn("⚠ ALTER:", e.message); });
+      });
+    }
   });
 });
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario · Productos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="brand-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+        </svg>
+      </div>
+      <span>Inventario</span>
+    </div>
+    <div class="navbar-status">
+      <div class="status-dot" id="navDot"></div>
+      <span id="navStatus">verificando...</span>
+      <span class="sep">·</span>
+      <span class="mono">localhost:3000</span>
+    </div>
+  </nav>
+
+  <!-- PAGE: REGISTER -->
+  <div class="page auth-layout show" id="page-register">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z"/>
+          </svg>
+        </div>
+        <h2>Crear cuenta</h2>
+        <p class="auth-sub">POST /register</p>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" id="reg-email" placeholder="usuario@correo.com" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+        </div>
+        <button class="btn btn-primary" onclick="doRegister()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z"/></svg>
+          Registrarse
+        </button>
+        <div class="toast" id="reg-toast"></div>
+        <div class="auth-footer">¿Ya tienes cuenta? <a onclick="goTo('login')">Inicia sesión</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: LOGIN -->
+  <div class="page auth-layout" id="page-login">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 21.75 8.25Z"/>
+          </svg>
+        </div>
+        <h2>Iniciar sesión</h2>
+        <p class="auth-sub">POST /login</p>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" id="login-email" placeholder="usuario@correo.com" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="login-pass" placeholder="Tu contraseña">
+        </div>
+        <button class="btn btn-primary" onclick="doLogin()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/></svg>
+          Ingresar
+        </button>
+        <div class="toast" id="login-toast"></div>
+        <div class="auth-footer">¿No tienes cuenta? <a onclick="goTo('register')">Regístrate aquí</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: DASHBOARD -->
+  <div class="page dash-page" id="page-dash">
+
+    <div class="dash-topbar">
+      <div class="topbar-left">
+        <h2>Productos</h2>
+        <span class="mono topbar-sub">MySQL · Railway</span>
+      </div>
+      <div class="topbar-right">
+        <div class="user-chip">
+          <div class="avatar-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+          </div>
+          <span id="dash-email">—</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/></svg>
+          Salir
+        </button>
+      </div>
+    </div>
+
+    <div class="dash-body">
+      <!-- Search bar -->
+      <div class="search-bar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+        <input type="text" id="search-input" placeholder="Buscar productos..." oninput="filterItems()">
+      </div>
+
+      <!-- Products grid -->
+      <div class="products-grid" id="items-grid">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
+          </div>
+          <p>Inicia sesión para ver los productos</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Add Button -->
+    <button class="fab" onclick="openModal()" title="Agregar producto">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    </button>
+
+  </div>
+
+  <!-- ==========================================
+       MODAL: CREATE / EDIT
+       ========================================== -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+    <div class="modal-box" id="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title">Nuevo Producto</h3>
+        <button class="modal-close" onclick="closeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="item-id">
+
+        <!-- Image Upload -->
+        <div class="img-upload-area" id="img-upload-area" onclick="document.getElementById('img-file').click()">
+          <div class="img-placeholder" id="img-placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+            <span>Haz clic para subir imagen</span>
+            <small>PNG, JPG, WEBP · Máx 5MB</small>
+          </div>
+          <img id="img-preview" src="" alt="Preview" style="display:none;">
+          <button class="img-remove" id="img-remove" onclick="removeImage(event)" style="display:none;">✕</button>
+        </div>
+        <input type="file" id="img-file" accept="image/*" style="display:none" onchange="previewImage(event)">
+
+        <div class="modal-fields">
+          <div class="field">
+            <label>Nombre del producto <span class="req">*</span></label>
+            <input type="text" id="item-nombre" placeholder="Ej: Laptop Dell XPS 15">
+          </div>
+          <div class="field">
+            <label>Descripción</label>
+            <textarea id="item-desc" placeholder="Descripción del producto..."></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Precio (S/.)</label>
+              <input type="number" id="item-precio" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="field">
+              <label>Stock</label>
+              <input type="number" id="item-stock" placeholder="0" min="0" step="1">
+            </div>
+          </div>
+          <div class="field">
+            <label>Categoría</label>
+            <select id="item-categoria">
+              <option value="">Sin categoría</option>
+              <option value="Electrónica">Electrónica</option>
+              <option value="Ropa">Ropa</option>
+              <option value="Alimentos">Alimentos</option>
+              <option value="Hogar">Hogar</option>
+              <option value="Deportes">Deportes</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Estado</span>
+            <button class="switch on" id="item-estado" onclick="toggleSwitch(this)"></button>
+            <span class="switch-text on" id="estado-label">Activo</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="modal-save-btn" onclick="saveItem()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+          Guardar producto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: CONFIRM DELETE
+       ========================================== -->
+  <div class="modal-overlay" id="confirm-overlay">
+    <div class="modal-box confirm-box">
+      <div class="confirm-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+      </div>
+      <h3>¿Eliminar producto?</h3>
+      <p id="confirm-msg">Esta acción no se puede deshacer.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-btn" onclick="confirmDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST GLOBAL -->
+  <div class="global-toast" id="global-toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
