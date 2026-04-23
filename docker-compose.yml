@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: node_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: shinkansen.proxy.rlwy.net
+      DB_USER: root
+      DB_PASSWORD: rUVbwSkNfNMCKwkqcOOZZaaTvpuBLAQh
+      DB_NAME: railway
+      DB_PORT: 37613
+      JWT_SECRET: mi_clave_secreta_muy_segura_2026
