@@ -128,3 +128,6 @@ docker-compose down
 
 # Ejecutar seed (cuando el contenedor esté listo)
 docker-compose exec app node seedP.js
+
+
+usar https://prueva-semana-10-1.onrender.com/
