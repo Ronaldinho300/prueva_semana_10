@@ -1,9 +1,17 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const app = express();
 
 const authRoutes = require("./auth");
 const itemRoutes = require("./items");
+
+// ✅ CORS — PRIMERO, antes de cualquier otra cosa
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 app.use(express.json());
 
