@@ -6,7 +6,7 @@ const db = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
+  port: process.env.DB_PORT || 43786,
 });
 
 db.connect((err) => {
@@ -18,18 +18,24 @@ db.connect((err) => {
   initTables();
 });
 
+
 function initTables() {
+
+  
   const queries = [
+    
     // USUARIOS (admin, vendedor, cliente)
     `CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      email VARCHAR(150) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      nombre VARCHAR(100) NOT NULL,
-      rol ENUM('admin', 'vendedor', 'cliente') NOT NULL DEFAULT 'cliente',
-      activo BOOLEAN DEFAULT 1,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    rol ENUM('admin', 'vendedor', 'cliente') NOT NULL DEFAULT 'cliente',
+    activo BOOLEAN DEFAULT 1,
+    login_attempts INT DEFAULT 0,
+    blocked_until DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
 
     // REFRESH TOKENS
     `CREATE TABLE IF NOT EXISTS refresh_tokens (
@@ -123,12 +129,21 @@ function initTables() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
       FOREIGN KEY (modificado_por) REFERENCES users(id)
-    )`
+    )`,
+    `CREATE TABLE IF NOT EXISTS recovery_tokens (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      token TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      used BOOLEAN DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );`
   ];
 
   const names = [
     "users", "refresh_tokens", "productos", "cotizaciones",
-    "cotizacion_items", "boletas", "historial", "producto_versiones"
+    "cotizacion_items", "boletas", "historial", "producto_versiones", "recovery_tokens"
   ];
 
   let i = 0;

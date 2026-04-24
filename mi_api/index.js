@@ -7,6 +7,9 @@ const productosRoutes = require("./productos");
 const cotizacionesRoutes = require("./cotizaciones");
 const boletasRoutes = require("./boletas");
 const historialRoutes = require("./historial");
+const recoveryRoutes = require("./recovery");
+
+app.use("/auth", recoveryRoutes);
 
 app.use(express.json());
 
@@ -35,6 +38,7 @@ app.get("/", (req, res) => {
 
 // ─── Rutas ────────────────────────────────────
 app.use("/auth", authRoutes);
+app.use("/auth/recovery", recoveryRoutes);
 app.use("/api", productosRoutes);
 app.use("/api", cotizacionesRoutes);
 app.use("/api", boletasRoutes);

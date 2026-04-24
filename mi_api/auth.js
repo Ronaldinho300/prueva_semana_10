@@ -5,6 +5,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { verifyToken, requireRol } = require("./middleware");
 const { registrar } = require("./historial.helper");
+const { enviarTokenEmail } = require("./mailer");
+
+
+
 
 // ─────────────────────────────────────────────
 // Helpers de validación
@@ -101,40 +105,107 @@ router.post("/login", (req, res) => {
       }
 
       const user = results[0];
-      const valid = await bcrypt.compare(password, user.password);
-      if (!valid) {
-        return res.status(401).json({ message: "Credenciales incorrectas" });
+
+      // ⛔ VERIFICAR BLOQUEO
+      if (user.blocked_until && new Date() < new Date(user.blocked_until)) {
+        return res.status(403).json({
+          message: "Usuario bloqueado. Revisa tu correo para recuperación."
+        });
       }
+
+      const valid = await bcrypt.compare(password, user.password);
+
+      // ❌ PASSWORD INCORRECTA
+      if (!valid) {
+        let attempts = user.login_attempts + 1;
+
+        // 🔴 SI LLEGA A 3 INTENTOS → bloquear y enviar token de recuperación
+        if (attempts >= 3) {
+          const recoveryToken = jwt.sign(
+            { id: user.id },
+            process.env.REFRESH_SECRET,
+            { expiresIn: "10m" }
+          );
+
+          const expires = new Date(Date.now() + 10 * 60 * 1000);
+          // Fecha de bloqueo: indefinida hasta que recupere la cuenta
+          const blockedUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
+          // 1️⃣ Marcar cuenta como bloqueada Y fijar intentos en 3
+          db.query(
+            "UPDATE users SET login_attempts = 3, blocked_until = ? WHERE id = ?",
+            [blockedUntil, user.id],
+            (err) => {
+              if (err) console.error("⚠️ Error bloqueando usuario:", err.message);
+            }
+          );
+
+          // 2️⃣ Invalidar tokens de recuperación anteriores que no se hayan usado
+          db.query(
+            "UPDATE recovery_tokens SET used = 1 WHERE user_id = ? AND used = 0",
+            [user.id]
+          );
+
+          // 3️⃣ Guardar el nuevo token de recuperación
+          db.query(
+            "INSERT INTO recovery_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
+            [user.id, recoveryToken, expires],
+            (err) => {
+              if (err) console.error("⚠️ Error guardando recovery token:", err.message);
+            }
+          );
+
+          // 4️⃣ Enviar token por email
+          enviarTokenEmail(user.email, recoveryToken);
+
+          return res.status(403).json({
+            message: "Cuenta bloqueada por demasiados intentos fallidos. Se envió un token de recuperación a tu correo."
+          });
+        }
+
+        // 🔁 Actualizar contador de intentos (aún no llega a 3)
+        db.query(
+          "UPDATE users SET login_attempts = ? WHERE id = ?",
+          [attempts, user.id]
+        );
+
+        return res.status(401).json({
+          message: `Credenciales incorrectas. Intento ${attempts} de 3.`
+        });
+      }
+
+      // 🔓 LOGIN EXITOSO → reset intentos
+      db.query(
+        "UPDATE users SET login_attempts = 0, blocked_until = NULL WHERE id = ?",
+        [user.id]
+      );
 
       const { accessToken, refreshToken } = generarTokens(user);
 
       db.query(
         "INSERT INTO refresh_tokens (user_id, token) VALUES (?, ?)",
-        [user.id, refreshToken],
-        (err) => {
-          if (err) return res.status(500).json({ message: "Error guardando sesión" });
-
-          registrar({
-            userId: user.id,
-            accion: "LOGIN",
-            entidad: "users",
-            entidadId: user.id,
-            descripcion: `Login exitoso: ${user.email} (${user.rol})`
-          });
-
-          res.json({
-            accessToken,
-            refreshToken,
-            usuario: {
-              id: user.id,
-              email: user.email,
-              nombre: user.nombre,
-              rol: user.rol
-            },
-            message: "Login exitoso"
-          });
-        }
+        [user.id, refreshToken]
       );
+
+      registrar({
+        userId: user.id,
+        accion: "LOGIN",
+        entidad: "users",
+        entidadId: user.id,
+        descripcion: `Login exitoso: ${user.email}`
+      });
+
+      res.json({
+        accessToken,
+        refreshToken,
+        usuario: {
+          id: user.id,
+          email: user.email,
+          nombre: user.nombre,
+          rol: user.rol
+        },
+        message: "Login exitoso"
+      });
     }
   );
 });
