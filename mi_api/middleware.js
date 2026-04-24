@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+/**
+ * Verifica el JWT y adjunta el usuario decodificado en req.user.
+ */
 function verifyToken(req, res, next) {
   const authHeader = req.headers["authorization"];
 
@@ -8,7 +11,6 @@ function verifyToken(req, res, next) {
     return res.status(401).json({ message: "Token requerido" });
   }
 
-  // Acepta formato "Bearer <token>" o solo "<token>"
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7)
     : authHeader;
@@ -17,9 +19,27 @@ function verifyToken(req, res, next) {
     if (err) {
       return res.status(403).json({ message: "Token inválido o expirado" });
     }
-    req.userId = decoded.id;
+    req.user = decoded; // { id, email, rol, nombre }
     next();
   });
 }
 
-module.exports = verifyToken;
+/**
+ * Fábrica de middleware para verificar roles.
+ * Uso: requireRol("admin") o requireRol("admin", "vendedor")
+ */
+function requireRol(...roles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+    if (!roles.includes(req.user.rol)) {
+      return res.status(403).json({
+        message: `Acceso denegado. Se requiere rol: ${roles.join(" o ")}`
+      });
+    }
+    next();
+  };
+}
+
+module.exports = { verifyToken, requireRol };

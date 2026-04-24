@@ -1,130 +1,182 @@
-BackendJS - Guía de uso con Thunder Client
-Esta guía te muestra paso a paso cómo probar todos los endpoints de la API usando Thunder Client (la extensión de VS Code).
+# 🛒 API de Ventas — Documentación
 
-📌 Requisitos previos
-Tener el servidor corriendo (npm run dev o docker compose up).
-Tener instalada la extensión Thunder Client en VS Code.
-Tener credenciales de prueba (si usaste el seed: admin/admin123, juan/juan123, maria/maria123).
-🔑 1. Obtener un token JWT (Login)
-Este paso es obligatorio para todas las operaciones con ítems.
+Sistema de ventas con 3 roles: **Admin**, **Vendedor** y **Cliente**.  
+Flujo: Cliente cotiza → Vendedor aprueba → Cliente confirma compra.
 
-Campo	Valor
-Método	POST
-URL	http://localhost:3000/auth/login
-Headers	Content-Type: application/json
-Body (JSON)	Ver ejemplo abajo
-Body (JSON):
+---
 
+## 🚀 Inicio rápido
+
+```bash
+npm install
+cp .env.example .env   # Configura tus variables
+node index.js
+```
+
+Credenciales del admin por defecto:
+- **Email:** admin@sistema.com  
+- **Password:** Admin1234!
+
+---
+
+## 🔐 Autenticación
+
+Todos los endpoints protegidos requieren el header:
+```
+Authorization: Bearer <accessToken>
+```
+
+El `accessToken` expira en **15 minutos**. Usa `/auth/refresh` para renovarlo.
+
+---
+
+## 📌 Endpoints
+
+### AUTH `/auth`
+
+| Método | Ruta | Roles | Descripción |
+|--------|------|-------|-------------|
+| POST | `/auth/register` | Público | Registro de cliente |
+| POST | `/auth/login` | Público | Login (devuelve accessToken + refreshToken) |
+| POST | `/auth/refresh` | Público | Renueva el accessToken |
+| POST | `/auth/logout` | Autenticado | Cierra sesión |
+| GET | `/auth/perfil` | Autenticado | Ver mi perfil |
+| POST | `/auth/vendedores` | Admin | Crear vendedor |
+| GET | `/auth/vendedores` | Admin | Listar vendedores |
+| PUT | `/auth/vendedores/:id` | Admin | Editar vendedor |
+| DELETE | `/auth/vendedores/:id` | Admin | Desactivar vendedor |
+| GET | `/auth/clientes` | Admin | Listar clientes |
+
+---
+
+### PRODUCTOS `/api/productos`
+
+| Método | Ruta | Roles | Descripción |
+|--------|------|-------|-------------|
+| GET | `/api/productos` | Todos | Listar (clientes solo ven activos) |
+| GET | `/api/productos/:id` | Todos | Ver producto |
+| POST | `/api/productos` | Admin | Crear producto |
+| PUT | `/api/productos/:id` | Admin, Vendedor | Editar (vendedor solo stock/descripción) |
+| DELETE | `/api/productos/:id` | Admin | Desactivar producto |
+| GET | `/api/productos/:id/versiones` | Admin, Vendedor | Historial de versiones |
+
+---
+
+### COTIZACIONES `/api/cotizaciones`
+
+| Método | Ruta | Roles | Descripción |
+|--------|------|-------|-------------|
+| POST | `/api/cotizaciones` | Cliente | Solicitar cotización |
+| GET | `/api/cotizaciones` | Todos | Listar (filtrado por rol) |
+| GET | `/api/cotizaciones/:id` | Todos | Detalle con items |
+| PUT | `/api/cotizaciones/:id/tomar` | Vendedor | Tomar cotización pendiente |
+| PUT | `/api/cotizaciones/:id/aprobar` | Vendedor | Aprobar y generar boleta |
+| PUT | `/api/cotizaciones/:id/rechazar` | Vendedor | Rechazar (requiere motivo) |
+
+---
+
+### BOLETAS `/api/boletas`
+
+| Método | Ruta | Roles | Descripción |
+|--------|------|-------|-------------|
+| GET | `/api/boletas` | Todos | Listar (filtrado por rol) |
+| GET | `/api/boletas/:id` | Todos | Detalle con items |
+| PUT | `/api/boletas/:id/confirmar` | Cliente | Confirmar compra (descuenta stock) |
+| PUT | `/api/boletas/:id/cancelar` | Cliente, Admin | Cancelar boleta |
+
+---
+
+### HISTORIAL `/api/historial`
+
+| Método | Ruta | Roles | Descripción |
+|--------|------|-------|-------------|
+| GET | `/api/historial` | Admin, Vendedor | Historial de acciones (con filtros) |
+| GET | `/api/historial/ventas` | Admin, Vendedor | Resumen de ventas confirmadas |
+| GET | `/api/historial/dashboard` | Admin | Métricas generales del sistema |
+| GET | `/api/historial/entidad/:entidad/:id` | Admin | Historial de un registro específico |
+
+**Filtros disponibles para `/api/historial`:**
+- `?entidad=productos` — filtrar por entidad
+- `?accion=CREAR` — buscar por nombre de acción
+- `?user_id=5` — acciones de un usuario (solo admin)
+- `?desde=2026-01-01&hasta=2026-12-31` — rango de fechas
+- `?page=1&limit=20` — paginación
+
+---
+
+## 🔄 Flujo de compra
+
+```
+1. Cliente → POST /api/cotizaciones          (solicita cotización con productos)
+2. Vendedor → PUT /api/cotizaciones/:id/tomar   (toma la cotización)
+3. Vendedor → PUT /api/cotizaciones/:id/aprobar (aprueba y genera boleta)
+              o PUT /api/cotizaciones/:id/rechazar (rechaza con motivo)
+4. Cliente → GET /api/boletas/:id              (ve la boleta generada)
+5. Cliente → PUT /api/boletas/:id/confirmar    (confirma la compra → descuenta stock)
+```
+
+---
+
+## 📦 Body de ejemplo
+
+### Registro de cliente
+```json
 {
-  "username": "admin",
-  "password": "admin123"
+  "email": "juan@gmail.com",
+  "password": "MiPass123",
+  "nombre": "Juan Pérez"
 }
+```
 
- 2. Operaciones con Ítems
-Para todas estas operaciones debes agregar el Header de autorización:
-
-Header: Authorization
-
-Value: Bearer <pega_aquí_el_token>
-
-📋 2.1 Obtener todos los ítems del usuario
-Campo	Valor
-Método	GET
-URL	http://localhost:3000/items
-Headers	Authorization: Bearer <tu_token>
-Pasos:
-
-Crea una nueva solicitud.
-
-Método GET, URL: http://localhost:3000/items
-
-Pestaña Headers, agrega Authorization con el valor Bearer <token>.
-
-Haz clic en Send.
-
-Verás un arreglo JSON con los ítems del usuario autenticado.
-2.3 Crear un nuevo ítem
-Campo	Valor
-Método	POST
-URL	http://localhost:3000/items
-Headers	Content-Type: application/json
-Authorization: Bearer <tu_token>
-Body (JSON)	Ver ejemplo
-Body (JSON):
-
-json
+### Solicitar cotización
+```json
 {
-  "name": "Mi nuevo ítem"
+  "nota_cliente": "Necesito los productos para mañana",
+  "items": [
+    { "producto_id": 1, "cantidad": 2 },
+    { "producto_id": 3, "cantidad": 1 }
+  ]
 }
-Pasos:
+```
 
-Método POST, URL: http://localhost:3000/items
-
-Headers: agrega Content-Type y Authorization.
-
-Pestaña Body, selecciona JSON, pega el body.
-
-Envía. La respuesta será el nuevo ítem creado con su ID.
-
-✏️ 2.4 Actualizar un ítem existente
-Campo	Valor
-Método	PUT
-URL	http://localhost:3000/items/1 (usa el ID del ítem a modificar)
-Headers	Content-Type: application/json
-Authorization: Bearer <tu_token>
-Body (JSON)	Ver ejemplo
-Body (JSON):
-
-json
+### Crear producto (admin)
+```json
 {
-  "name": "Nombre actualizado del ítem"
+  "nombre": "Laptop Dell",
+  "descripcion": "Intel i5, 8GB RAM, 256GB SSD",
+  "precio": 2500.00,
+  "stock": 10
 }
-Pasos: Igual que en la creación, pero cambiando el método a PUT y la URL incluyendo el ID.
+```
 
-❌ 2.5 Eliminar un ítem
-Campo	Valor
-Método	DELETE
-URL	http://localhost:3000/items/1 (usa el ID del ítem a borrar)
-Headers	Authorization: Bearer <tu_token>
-Pasos:
+---
 
-Método DELETE, URL con el ID del ítem.
+## 🛡️ Estados de Cotización
 
-Header Authorization con el token.
+| Estado | Descripción |
+|--------|-------------|
+| `pendiente` | Recién creada por el cliente |
+| `revisando` | Tomada por un vendedor |
+| `aprobada` | Aprobada, boleta generada |
+| `rechazada` | Rechazada por el vendedor |
+| `completada` | Compra confirmada por el cliente |
 
-Envía. La respuesta será un mensaje { "message": "Eliminado" }.
+## 🧾 Estados de Boleta
 
-🔄 3. Registrar un nuevo usuario (opcional)
-Si necesitas crear una cuenta nueva:
-
-Campo	Valor
-Método	POST
-URL	http://localhost:3000/auth/register
-Headers	Content-Type: application/json
-Body (JSON)	Ver ejemplo
-Body (JSON):
-
-json
-{
-  "username": "nuevo_usuario",
-  "password": "contraseña123"
-}
+| Estado | Descripción |
+|--------|-------------|
+| `emitida` | Generada por el vendedor, esperando confirmación |
+| `confirmada` | Compra completada, stock descontado |
+| `cancelada` | Cancelada por el cliente o admin |
 
 
+##LEVANTAR POR DOCKER
 
-##LEVANTAR POR DOCKER 
+#LIMPIA CACHE docker-compose down docker system prune -f
 
-#LIMPIA CACHE
+#LEVANTA CONTENEDOR DOCKER docker-compose up -d
+
+#LOGS docker docker-compose logs -f app
+
+Detener
 docker-compose down
-docker system prune -f
-
-#LEVANTA CONTENEDOR DOCKER
-docker-compose up -d
-
-#LOGS docker
-docker-compose logs -f app
-# Detener
-docker-compose down
-
-# Ejecutar seed (cuando el contenedor esté listo)
-docker-compose exec app node seedP.js
